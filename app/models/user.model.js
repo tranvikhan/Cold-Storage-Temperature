@@ -15,7 +15,7 @@ const User = mongoose.model(
 
       address: { type: String, default: "" },
       status: { type: String, default: "" },
-      avatar: { type: String, default: "http://localhost:8080/api/user/avatar/default.jpg" },
+      avatar: { type: String, default: "http://vikhan.herokuapp.com/api/user/avatar/default.jpg" },
     },
     { timestamps: true }
   )
