@@ -38,3 +38,35 @@ exports.findUser = (req, res) => {
     res.status(200).send(user);
   });
 };
+exports.editUser = (req, res) =>{
+  User.findById(req.userId).exec((err, user) => {
+    if (err) {
+      res.status(400).send({ messageError: err });
+      return;
+    }
+    if(req.body.fullname){
+      user.fullname = req.body.fullname;
+    }
+    if(req.body.phone){
+      user.phone = req.body.phone;
+    }
+    if(req.body.gender){
+      user.gender = req.body.gender;
+    }
+    if(req.body.address){
+      user.address = req.body.address;
+    }
+    if(req.body.avatar){
+      user.avatar = req.body.avatar;
+    }
+    console.log(user);
+    user
+      .save()
+      .then(() => {
+        res.status(200).send({ message: "Edit Success" });
+      })
+      .catch((err) => {
+        res.status(400).send({ messageError: err });
+      });
+  });
+}

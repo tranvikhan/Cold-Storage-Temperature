@@ -12,4 +12,5 @@ module.exports = function (app) {
   app.get("/api/user/", controller.getAllUser);
   app.get("/api/user/find", controller.findUser);
   app.get("/api/user/avatar/:filename", controller.getAvatar);
+  app.post("/api/user/edit",[authJwt.verifyToken], controller.editUser);
 };
