@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
+const cors = require('cors')
 require("dotenv").config();
 const routes = require("./app/routes");
 const app = express();
@@ -9,6 +9,8 @@ const app = express();
 const session = require('express-session');
 app.use(session({secret: "Shh, its a secret!"}));
 
+
+app.use(cors);
 
 
 //Databasse Connect
