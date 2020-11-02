@@ -10,7 +10,7 @@ const session = require('express-session');
 app.use(session({secret: "Shh, its a secret!"}));
 
 
-app.use(cors);
+app.use(cors());
 
 
 //Databasse Connect
