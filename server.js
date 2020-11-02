@@ -6,8 +6,8 @@ const routes = require("./app/routes");
 const app = express();
 
 //Sesson
-const session = require('express-session');
-app.use(session({secret: "Shh, its a secret!"}));
+/* const session = require('express-session');
+app.use(session({secret: "Shh, its a secret!"})); */
 
 
 
