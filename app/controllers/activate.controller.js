@@ -99,6 +99,7 @@ exports.addActivate = (req,res) =>{
                                 .save();
                             });
                             global.activate_trigger = 1;
+                            req.io.to('room'+req.body.room_id).emit('activate',{message:'add',data:{room:req.body.room_id,activate:newActivate}})
                             result.Ok(res, {activate:{...newActivate._doc,sensors: sensors.data.data.length}});
                         })
                         .catch(err=>{
@@ -130,7 +131,7 @@ exports.removeActivate = (req,res) =>{
             result.ServerError(res,err)
             return;
         }
-        Activate.find({room: req.body.room_id}).exec((err,activates)=>{
+        Activate.find({room: req.body.room_id,_id: req.body.activate_id}).exec((err,activates)=>{
             if(err){
                 return result.ServerError(res,err);
             }
@@ -154,21 +155,32 @@ exports.removeActivate = (req,res) =>{
                             });
                             
                             newStructure.save().then(()=>{
-                                Activate.find({room: req.body.room_id}).exec((err,activates) => {
-                                    Sensor.deleteMany({activate: {$in: activates.map(at=>(at._id))}}).exec((err)=>{
+                                Activate.find({room: req.body.room_id,_id: req.body.activate_id}).exec((err,activates) => {
                                     if (err) {
                                         result.ServerError(res,err);
                                         return;
                                     }
-                                    Activate.deleteMany({ room: req.body.room_id}).exec(err=>{
-                                        if (err) {
-                                        result.ServerError(res,err);
-                                        return;
-                                        }
-                                        global.activate_trigger = 1;
-                                        result.Ok(res,"Đã gỡ bỏ api");
-                                    })
-                                    })
+                                    if(activates){
+                                        Sensor.deleteMany({activate: {$in: activates.map(at=>(at._id))}}).exec((err)=>{
+                                            if (err) {
+                                                result.ServerError(res,err);
+                                                return;
+                                            }
+                                            Activate.deleteMany({ room: req.body.room_id,_id: req.body.activate_id}).exec(err=>{
+                                                if (err) {
+                                                result.ServerError(res,err);
+                                                return;
+                                                }
+                                                global.activate_trigger = 1;
+                                                req.io.to('room'+req.body.room_id).emit('activate',{message:'delete',data:{room:req.body.room_id,activate:req.body.activate_id}})
+                                                result.Ok(res,"Đã gỡ bỏ api");
+                                            })
+                                            })
+                                    }else{
+                                        return result.NotFound(res,'Lỗi');
+                                    }
+
+                                    
                                 })                                
                             }).catch(err=>{
                                 result.ServerError(res,err)

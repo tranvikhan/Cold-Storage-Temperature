@@ -40,12 +40,14 @@ exports.createArea = (req, res) => {
             room: req.body.room_id,
             name: req.body.name,
             size: req.body.size,
-            monitors: req.body.monitors
+            monitors: req.body.monitors,
+            emailOn:req.body.emailOn,
+            monitorOn:req.body.monitorOn
         }
     );
     newArea.save()
     .then(area=>{
-      req.io.to('room'+area.room).emit('room',{message:'add-area',data:area});
+      req.io.to('room'+area.room).emit('area',{message:'add',data:{room:area.room, area: area }});
       result.Ok(res,{area:area});
     })
     .catch(err=>{
@@ -75,11 +77,13 @@ exports.editArea = (req, res) => {
           if (req.body.monitors) {
              area.monitors = req.body.monitors;
           }
+          if(req.body.emailOn!= null) area.emailOn = req.body.emailOn;
+          if(req.body.monitorOn !=null) area.monitorOn = req.body.monitorOn;
           
           area
             .save()
             .then((area) => {
-              req.io.to('room'+area.room).emit('room',{message:'edit-area',data:area});
+              req.io.to('room'+area.room).emit('area',{message:'edit',data:{room:area.room, area: area }});
               result.Ok(res,{area:area})
             })
             .catch((err) => {
@@ -99,7 +103,7 @@ exports.deleteArea = (req, res) => {
             result.ServerError(res,err)
             return;
         }
-        req.io.to('room'+req.body.room_id).emit('room',{message:'delete-area',data:req.body.area_id});
+        req.io.to('room'+req.body.room_id).emit('area',{message:'delete',data:{room:req.body.room_id, area: req.body.area_id}});
         result.Ok(res,'Xóa thành công');
     })
 }
@@ -137,7 +141,10 @@ exports.addMonitor = (req,res) =>{
         area.monitors.push(req.body.monitor);
         area.save()
         .then(area=>{
+         
+          req.io.to('room'+req.body.room_id).emit('area',{message:'add-monitor',data:{room:req.body.room_id,area:area._id,monitors:area.monitors}});
           result.Ok(res,{monitors:area.monitors});
+          
         })
         .catch(err=>{
           result.ServerError(res,err);
@@ -172,7 +179,9 @@ exports.editMonitor = (req,res) =>{
 
           area.save()
           .then(area=>{
+            req.io.to('room'+req.body.room_id).emit('area',{message:'edit-monitor',data:{room:req.body.room_id,area:area._id,monitor:temp}});
             result.Ok(res,{monitor:temp});
+            
           })
           .catch(err=>{
             result.ServerError(res,err);
@@ -209,7 +218,9 @@ exports.switchMonitor = (req,res) =>{
         temp.active = !temp.active;
           area.save()
           .then(area=>{
+            req.io.to('room'+req.body.room_id).emit('area',{message:'switch-monitor',data:{room:req.body.room_id,area:area._id,monitor:temp}});
             result.Ok(res,{monitor:temp});
+            
           })
           .catch(err=>{
             result.ServerError(res,err);
@@ -244,7 +255,9 @@ exports.deleteMonitor = (req,res) =>{
         area.monitors = area.monitors.filter(mt => mt._id != req.body.monitor_id);
           area.save()
           .then(area=>{
+            req.io.to('room'+req.body.room_id).emit('area',{message:'delete-monitor',data:{room:req.body.room_id,area:area._id,monitors:area.monitors}});
             result.Ok(res,{monitors:area.monitors});
+            
           })
           .catch(err=>{
             result.ServerError(res,err);

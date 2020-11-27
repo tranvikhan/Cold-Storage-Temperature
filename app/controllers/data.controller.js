@@ -3,6 +3,7 @@ const db = require("../models");
 const axios = require('axios');
 const config = require('../config/data.config');
 const visualData = require('./GetSensorData/visualData');
+const mailler = require("../helps/mailler.help");
 
 const xlsxFile = require('read-excel-file/node');
 const interpolationArea = require('./Interpolations/MonitorInterpolation');
@@ -12,12 +13,15 @@ const Room = db.room;
 const Structure = db.structure;
 const Sensor = db.sensor;
 const Activate = db.activate;
+const Notification = db.notification;
+const Access = db.access;
 
 global.currentData = null;
 
 const fake = require("./Interpolations/cubeInterpolation").Fake;
 const result = require("../helps/result.helps");
 const { sensor, data } = require("../models");
+const User = require("../models/user.model");
 
 
 
@@ -352,8 +356,10 @@ const sendDataToRoom = (io)=>{
                         status: (realtimeData.data_value >99)?"OFF":((st.sensor.isUsed)?"RUNNING":"ON")
                     })
                 })
+                if(realtimeData){
+                    io.to('room'+room._id).emit('data_room',{room:room._id,datas: data,time: realtimeData.data_createdDate});
+                }
                 
-                io.to('room'+room._id).emit('data_room',{room:room._id,datas: data,time: realtimeData.data_createdDate});
 
                 Area.find({room:room._id}).exec((err,areas)=>{
                     if(err){
@@ -363,12 +369,111 @@ const sendDataToRoom = (io)=>{
                     if(areas!=null && areas.length>0 && data.length>0){
                         //console.log(data,room,areas);
                         areaThemp = interpolationArea.Get(data,room,areas);
-                        areaThemp = areaThemp.map(area => ({_id:area._id,name: area.name,value: area.average}))
-                        io.to('room'+room._id).emit('data_area',{room:room._id,areas: areaThemp,time: realtimeData.data_createdDate});
+                        io.to('room'+room._id).emit('data_area',{room:room._id,areas:areaThemp ,time: realtimeData.data_createdDate});
+                        
+                        areaThemp.map(area=>{
+                            if(area.monitorOn){
+                                area.monitors.map(monitor=>{
+                                    let isTimeChecked = checkTime(realtimeData.data_createdDate,monitor.times);
+                                    
+                                    if(isTimeChecked && monitor.active && (area.average < monitor.temperature.min || area.average > monitor.temperature.max)){
+                                        let type = (area.average < monitor.temperature.min)?'WARRING_LOW_TEMPERATURE':'WARRING_HIGH_TEMPERATURE';
+                                        Access.find({ room: area.room},{_id:0,role:1,room:1,accepted:1})
+                                        .populate("user",'fullname avatar _id  username email')
+                                        .exec((err, accesses) => {
+                                        if (err) {
+                                            return;
+                                        }
+                                        if(accesses.length>0){
+                                            accesses.map(access =>{
+                                                Notification.findOne({user:access.user._id,obj_id:area._id,type:type,ref:'Area'}).sort({"createdAt":-1}).exec((err,notification)=>{
+                                                    if(err){
+                                                        return;
+                                                    }
+                                                    if(notification){
+                                                        let notificationHouse = new Date(notification.createdAt);
+                                                        let currentTime = new Date();
+                                                        if((currentTime - notificationHouse)/1000/60 > 59){
+                                                            let newNotification = new Notification({
+                                                                user:access.user._id,
+                                                                ref:'Area', 
+                                                                content:'Cảnh báo nhiệt độ khu vực '+ area.name+ ' có nhiệt độ '+Math.round(area.average * 100) / 100+ '°C',
+                                                                type:type,
+                                                                obj_id: area._id
+                                                            })
+                                                            newNotification.save();
+                                                            io.to('room'+area.room).emit('notification',{message:'add',data:newNotification});
+                                                            if(area.emailOn){
+                                                                mailler.sendMail(access.user.email,'CẢNH BÁO NHIỆT ĐỘ',htmlData(access.user,room,area,monitor,type)).then().catch((err)=>{return});
+                                                            }
+                                                        }else{
+                                                            notification.content = 'Cảnh báo nhiệt độ khu vực '+ area.name+ ' có nhiệt độ '+Math.round(area.average * 100) / 100+ '°C';
+                                                            notification.save();
+                                                            io.to('room'+area.room).emit('notification',{message:'update',data:notification});
+                                                        }
+                                                        
+                                                    }else{
+                                                        let newNotification = new Notification({
+                                                            user:access.user._id,
+                                                            ref:'Area', 
+                                                            content:'Cảnh báo nhiệt độ khu vực '+ area.name+ ' có nhiệt độ '+Math.round(area.average * 100) / 100+ '°C',
+                                                            type:type,
+                                                            obj_id: area._id
+                                                        })
+                                                        newNotification.save();
+                                                        io.to('room'+area.room).emit('notification',{message:'add',data:newNotification});
+                                                        if(area.emailOn){
+                                                            mailler.sendMail(access.user.email,'CẢNH BÁO NHIỆT ĐỘ',htmlData(access.user,room,area,monitor,type)).then().catch((err)=>{return});
+                                                        }
+                                                                                                
+                                                    }
+                                                })
+                                            })
+                                        }
+                                        });
+                                    }
+                                })
+                            }
+                        })
+
                     }
+                    
                 })
             }
         });
         })
     })       
 }
+
+
+const checkTime = (strCurrentTime,monitorTime)=>{
+    let currentTime = new Date(strCurrentTime);
+    let fromTime = new Date(monitorTime.from);
+    let toTime = new Date(monitorTime.to);
+    let numCurrentTime = currentTime.getHours() *60 + currentTime.getMinutes();
+    let numfromTime = fromTime.getHours() *60 + fromTime.getMinutes();
+    let numtoTime = toTime.getHours() *60 + toTime.getMinutes();
+    return (numCurrentTime >= numfromTime && numCurrentTime <= numtoTime)?true:false;
+    
+}
+
+
+const htmlData = (user,room,area,monitor,type) => {
+    let noti = (type =='WARRING_HIGH_TEMPERATURE')? `<span style="color: rgb(226, 80, 65);"><strong>cao hơn </strong></span>`:`<span style="color: rgb(41, 105, 176);"><strong>Thấp hơn</strong></span>`;
+    let abs =(type =='WARRING_HIGH_TEMPERATURE')?area.average-monitor.temperature.max: area.average - monitor.temperature.min;
+    let nowtime = new Date();
+    let strtime = nowtime.toUTCString();
+    return `<h3>Xin ch&agrave;o, <strong>`+user.fullname+`</strong></h3>
+  <p><strong>Kho lạnh:</strong> `+room.name+`</p>
+  <p><strong>Khu vực:</strong> `+area.name+`</p><p><span style="color: rgb(41, 105, 176);">
+  <em>Đang c&oacute; nhiệt độ ngo&agrave;i ngưỡng cho ph&eacute;p.</em>
+  </span></p><p><strong>Nhiệt độ cho ph&eacute;p từ:</strong> `+monitor.temperature.min +` <span style="color: rgb(32, 33, 36); font-family: arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">&deg;C</span>&nbsp;
+   đến &nbsp;`+monitor.temperature.max +` <span style="color: rgb(32, 33, 36); font-family: arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">&deg;C</span>&nbsp;</p>
+   <p><strong>Nhiệt độ cảnh b&aacute;o:</strong> `+area.average+` <span style="color: rgb(32, 33, 36); font-family: arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">&deg;C</span> , 
+   `+noti+`
+   : 
+   `+Math.round(abs*100)/100+` <span style="color: rgb(32, 33, 36); font-family: arial, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none;">&deg;C</span>&nbsp;</p>
+   <p>Dấu thời gian:&nbsp;`+strtime+`</p>
+   <p><em>Vui l&ograve;ng điều chỉnh nhiệt độ kho lạnh của bạn hoặc tắt chế độ gi&aacute;m s&aacute;t để bỏ qua c&aacute;c email tiếp theo, xin cảm ơn</em></p><p><br></p><p><br></p><p><br></p><h3><br></h3>`
+}
+  

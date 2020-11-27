@@ -48,7 +48,7 @@ exports.addAccess = (req, res) => {
         obj_id: access._id
       });
       newNotification.save().then((notification)=>{
-        req.io.to('user'+notification.user).emit('notification', notification);
+        req.io.to('user'+notification.user).emit('notification', {message:'add',data:notification});
         result.Ok(res,{access:access});
         
       }).catch(err=>{

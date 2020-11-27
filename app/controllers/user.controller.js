@@ -1,6 +1,7 @@
 const db = require("../models");
 const fs = require("fs");
 const result = require("../helps/result.helps");
+const mailler = require("../helps/mailler.help");
 const User = db.user;
 var bcrypt = require("bcryptjs");
 const Resize = require('../helps/resizeImage.help');
@@ -107,7 +108,13 @@ exports.forgotPassword = (req, res) => {
       user.password = bcrypt.hashSync(newPassword, 8);
       user.save()
         .then(() =>{
-          result.Ok(res, {password: newPassword});
+          mailler.sendMail(req.body.email,'ĐỔI MẬT KHẨU', htmlData(user,newPassword)).then(()=>{
+            result.Ok(res, 'Mật khẩu mới đã được gửi vào email của bạn');
+          })
+          .catch(err=>{
+            result.ServerError(res,err)
+          })
+          
         })
         .catch(err=>{
           result.ServerError(res,err)
@@ -184,4 +191,12 @@ exports.uploadAvatar = function(req, res){
 
   })
   
+}
+
+const htmlData = (user,newPassword) => {
+  return `<h4 skip="true" style="text-align: left;"><span style="font-size: 18px;">Xin ch&agrave;o,`+user.fullname+`</span>
+  <span style="font-size: 14px; font-family: Arial, Helvetica, sans-serif;"><strong>
+  <img src="`+user.avatar+`" style="width: 57px;" class="fr-fic fr-dib fr-fil"></strong></span></h4><h3 style="text-align: left;
+  "><span style="font-size: 24px;">Mật khẩu mới của bạn l&agrave;:</span></h3><p style="text-align: left;"><span style="font-size: 60px;">`+newPassword+`</span></p><p style="text-align: left;">Vui l&ograve;ng thay đổi mật khẩu khi đăng nhập th&agrave;nh c&ocirc;ng, xin cảm ơn <span class="fr-emoticon fr-deletable fr-emoticon-img" style="background:
+  url(https://cdnjs.cloudflare.com/ajax/libs/emojione/2.0.1/assets/svg/1f600.svg);">&nbsp;</span></p>`
 }

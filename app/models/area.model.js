@@ -15,6 +15,10 @@ const Area = mongoose.model(
         y1: { type: Number, require: true },
         z1: { type: Number, require: true },
       },
+
+      emailOn:{ type: Boolean, default:false},
+      monitorOn:{ type: Boolean, default:true},
+      
       monitors:[
         {
           times:{

@@ -71,11 +71,8 @@ db.mongoose
 
 /* Run Server------------------------------------*/
 app.set('port', process.env.PORT || 8080);
-
-//app.set('ip', process.env.IP || '127.0.0.1');
-
 server.listen(app.get('port'), function() {
-  console.log('I am nunning at: http://%s:%s', app.get('ip'), app.get('port'));
+  console.log('I am nunning at port: ', app.get('port'));
 });
 
 
