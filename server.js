@@ -61,7 +61,7 @@ db.mongoose
   })
   .then(() => {
     console.log("MongoDB Connect Success");
-    setRealtimeData(io);
+    //setRealtimeData(io);
   })
   .catch((err) => {
     console.error("Connect to MongoDB failed", err);
