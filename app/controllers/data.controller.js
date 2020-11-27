@@ -353,6 +353,8 @@ const sendDataToRoom = (io)=>{
                     })
                 })
                 
+                io.to('room'+room._id).emit('data_room',{room:room._id,datas: data,time: realtimeData.data_createdDate});
+
                 Area.find({room:room._id}).exec((err,areas)=>{
                     if(err){
                         console.log(err);
@@ -363,7 +365,6 @@ const sendDataToRoom = (io)=>{
                         areaThemp = interpolationArea.Get(data,room,areas);
                         areaThemp = areaThemp.map(area => ({_id:area._id,name: area.name,value: area.average}))
                         io.to('room'+room._id).emit('data_area',{room:room._id,areas: areaThemp,time: realtimeData.data_createdDate});
-                        io.to('room'+room._id).emit('data_room',{room:room._id,datas: data,time: realtimeData.data_createdDate});
                     }
                 })
             }
