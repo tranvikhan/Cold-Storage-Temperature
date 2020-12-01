@@ -9,7 +9,7 @@ const config = require('../config/data.config');
 //Get All Activate of Room
 exports.getAllActivate = (req,res) =>{
     Activate
-    .find({room: req.body.room_id},'api _id station_id station_name')
+    .find({room: req.body.room_id},'api _id station_id station_name createdAt')
     .exec((err,activates)=>{
         if(err){
             result.ServerError(res, err);
