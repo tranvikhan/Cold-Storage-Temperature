@@ -34,17 +34,22 @@ exports.getAvatar = (req, res) => {
       }
     });
   } catch (errs) {
-    fs.readFile("./uploads/UserAvatar/default.jpg", function (
-      err,
-      data
-    ) {
-      if (err) {
-        res.status(404).send("Not Found");
-      } else {
-        res.writeHead(200, { "Content-Type": "image/jpeg" });
-        res.end(data); // Send the file data to the browser.
-      }
-    });
+    try{
+      fs.readFile("./uploads/UserAvatar/default.jpg", function (
+        err,
+        data
+      ) {
+        if (err) {
+          res.status(404).send("Not Found");
+        } else {
+          res.writeHead(200, { "Content-Type": "image/jpeg" });
+          res.end(data); // Send the file data to the browser.
+        }
+      });
+    }catch(err){
+      res.status(404).send("Not Found");
+    }
+    
   }
 };
 
