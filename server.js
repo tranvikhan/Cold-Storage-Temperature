@@ -24,12 +24,12 @@ app.use(cors());
 require("dotenv").config();
 
 /* Express Session------------------------------------*/
-const session = require('express-session');
+/* const session = require('express-session');
 app.use(session({
   secret: 'keyboard cat',
   resave: false,
   saveUninitialized: true
-}));
+})); */
 
 /* App Router------------------------------------*/
 const routes = require("./app/routes");
