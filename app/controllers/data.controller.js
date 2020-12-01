@@ -161,6 +161,7 @@ exports.getSensorData = (req,res)=>{
                                     datatype_id: sensorX.datatype_id,
                                     data_id: sensorX.data_id,
                                     value: realtimeData.data_value,
+                                    name: sensorX.name,
                                     status: (realtimeData.data_value >99)?"OFF":((sensorX.isUsed)?"RUNNING":"ON")
                                 })
                             });
