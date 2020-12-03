@@ -36,6 +36,7 @@ const routes = require("./app/routes");
 
 app.use(function (req, res, next) {
   req.io = io;
+  req.body = {...req.body,...req.query};
   res.header(
     "Access-Control-Allow-Headers",
     "x-access-token, Origin, Content-Type, Accept"
