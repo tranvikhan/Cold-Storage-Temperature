@@ -4,7 +4,11 @@ const app = express();
 const server = require('http').createServer(app);
 global.activate_trigger = 1;
 /* Socket.io server------------------------------------*/
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+  cors: {
+    origin: '*',
+  }
+});
 
 const socketController = require("./app/controllers/socket.controller").socketController;
 io.on('connection', socket => {
