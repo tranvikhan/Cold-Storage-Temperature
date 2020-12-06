@@ -2,7 +2,7 @@ module.exports ={
     /* 2 option: real, fake */
     mode:"fake",
     fake:{
-        rowsFake:400,
+        rowsFake:350,
         fileName:"Data11.xlsx",
     },
     real:{
