@@ -18,11 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 /* Cors --------------------------------------------*/
 const cors = require('cors')
-var corsOptions = {
-  origin: 'http://localhost:3000',
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
-app.use(cors(corsOptions));
+app.use(cors());
 
 /* dotEnv --------------------------------------------*/
 require("dotenv").config();
@@ -43,7 +39,7 @@ app.use(function (req, res, next) {
   req.body = {...req.body,...req.query};
   res.header(
     "Access-Control-Allow-Headers",
-    "x-access-token, Origin, Content-Type, Accept"
+    "*"
   );
   next();
 })
