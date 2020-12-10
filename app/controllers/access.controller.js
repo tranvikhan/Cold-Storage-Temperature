@@ -49,6 +49,7 @@ exports.addAccess = (req, res) => {
       });
       newNotification.save().then((notification)=>{
         req.io.to('user'+notification.user).emit('notification', {message:'add',data:notification});
+        req.io.to('room'+access.room).emit('access',{message:'invite',data:{access}})
         result.Ok(res,{access:access});
         
       }).catch(err=>{

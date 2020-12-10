@@ -36,6 +36,7 @@ exports.getAreaData = (req, res) =>{
             console.log(err);
             return;
         }
+        if(room){
             Structure.findOne({ room: room._id}).populate({
                 path: 'map',
                 populate: { path: 'sensor' }
@@ -81,7 +82,11 @@ exports.getAreaData = (req, res) =>{
                 }else{
                     result.NotFound(res,'Không có dữ liệu');
                 }
-        });
+            });
+        }else{
+            result.NotFound(res,'Không có dữ liệu');
+        }
+            
     })
 }
 
@@ -117,7 +122,7 @@ exports.getCurrent = (req, res) => {
                 
             })
             if(realtimeData != null && data.length>0){
-                result.Ok( res, {room:req.body.room_id,data:data,time: realtimeData.data_createdDate});
+                result.Ok( res, {room:req.body.room_id,datas:data,time: realtimeData.data_createdDate});
             }else{
                 result.NotFound(res,'Không có dữ liệu')
             }
@@ -167,7 +172,7 @@ exports.getSensorData = (req,res)=>{
                             });
                             result.Ok(res,{
                                 room: req.body.room_id,
-                                data: data,
+                                datas: data,
                                 time: realtimeData.data_createdDate
                             });
                         }else{
@@ -316,7 +321,7 @@ const FakeData = (rows,io,index)=>{
         }
         setTimeout(()=>{
             FakeData(rows,io,newIndex);
-        },10000); 
+        },30000); 
         
     });
 }
@@ -402,8 +407,9 @@ const sendDataToRoom = (io)=>{
                                                                 type:type,
                                                                 obj_id: area._id
                                                             })
-                                                            newNotification.save();
-                                                            io.to('room'+area.room).emit('notification',{message:'add',data:newNotification});
+                                                            newNotification.save().then(notificationX =>{
+                                                                io.to('room'+area.room).emit('notification',{message:'add',data:notificationX});
+                                                            })
                                                             if(area.emailOn){
                                                                 mailler.sendMail(access.user.email,'CẢNH BÁO NHIỆT ĐỘ',htmlData(access.user,room,area,monitor,type)).then().catch((err)=>{return});
                                                             }

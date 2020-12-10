@@ -99,7 +99,7 @@ exports.addActivate = (req,res) =>{
                                 .save();
                             });
                             global.activate_trigger = 1;
-                            req.io.to('room'+req.body.room_id).emit('activate',{message:'add',data:{room:req.body.room_id,activate:newActivate}})
+                            req.io.to('room'+req.body.room_id).emit('activate',{message:'add',data:{room:req.body.room_id,activate:{...newActivate._doc,sensors: sensors.data.data.length}}})
                             result.Ok(res, {activate:{...newActivate._doc,sensors: sensors.data.data.length}});
                         })
                         .catch(err=>{
