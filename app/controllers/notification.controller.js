@@ -4,7 +4,7 @@ const result = require("../helps/result.helps");
 
 /* Get All -------------------------------------*/
 exports.getAllNotification = (req,res)=>{
-  Notification.find({user: req.userId}).exec((err,notifications)=>{
+  Notification.find({user: req.userId}).sort({"updatedAt":-1}).exec((err,notifications)=>{
     if (err) {
       result.ServerError(res,err)
       return;

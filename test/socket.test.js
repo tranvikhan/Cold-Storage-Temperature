@@ -1,5 +1,5 @@
 var io = require('socket.io-client');
-var socket = io.connect('http://localhost:8080/');
+var socket = io.connect('http://vikhan.herokuapp.com/');
 var myUser ='5fc05b70d2b6a82f10235ded';
 var myToken ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmYzA1YjcwZDJiNmE4MmYxMDIzNWRlZCIsImlhdCI6MTYwNzU2OTc5NSwiZXhwIjoxNjA3NjU2MTk1fQ.gUWKqEHuHHqnhqB8Q5zTfZCdnVThVR7FJqVoSyqwvHY';
 
