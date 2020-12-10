@@ -18,16 +18,59 @@ const Access = db.access;
 
 global.currentData = null;
 
-const fake = require("./Interpolations/cubeInterpolation").Fake;
+const NoiSuyBaChieu = require('./Interpolations/cubeInterpolation').NoiSuyBaChieu;
 const result = require("../helps/result.helps");
-const { sensor, data } = require("../models");
-const User = require("../models/user.model");
-
 
 
 /* Demo Get Data (Dev Tool)-------------------------------*/
-exports.getDemoData = (req, res) => {
-  res.send(fake());
+exports.getCubeData = (req, res) => {
+    Room.findOne({_id: req.body.room_id}).exec((err,room)=>{
+        if(err || !room){
+            result.ServerError(res,err);
+            return;
+        }
+        Structure.findOne({ room: room._id},'map').populate({
+            path: 'map',
+            populate: { path: 'sensor' }
+        }).sort({"createdAt":-1}).exec((err,structure)=>{
+            if(err){
+                result.ServerError(res,err);
+                return;
+            }
+            if(structure && global.currentData !=null){
+                let data = new Array();
+                let realtimeData;
+                structure.map.map(st =>{
+                    realtimeData = global.currentData.find(sensor => {
+                        return sensor.data_id === st.sensor.data_id;
+                    });
+                    if (realtimeData != null){
+                        data.push({
+                            _id: st.sensor._id,
+                            x: st.location.x,
+                            y: st.location.y,
+                            z: st.location.z,
+                            value: realtimeData.data_value,
+                        })
+                    }
+                    
+                })
+                if(realtimeData != null && data.length>0){
+                    result.Ok( res, {
+                        cubeData:NoiSuyBaChieu([...data],room),
+                        time: realtimeData.data_createdDate
+                    });
+                }else{
+                    result.NotFound(res,'Không có dữ liệu')
+                }
+                
+            }else{
+                result.NotFound(res,'Không có dữ liệu')
+            }
+            
+        });
+    })
+    
 };
 
 exports.getAreaData = (req, res) =>{
@@ -364,6 +407,10 @@ const sendDataToRoom = (io)=>{
                 })
                 if(realtimeData){
                     io.to('room'+room._id).emit('data_room',{room:room._id,datas: data,time: realtimeData.data_createdDate});
+                    io.to('room'+room._id).emit('data_cube_room',{room:room._id,
+                                                            cubeData:NoiSuyBaChieu([...data],room),
+                                                            time: realtimeData.data_createdDate
+                                                            });
                 }
                 
 

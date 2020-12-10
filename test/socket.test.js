@@ -1,7 +1,7 @@
 var io = require('socket.io-client');
-var socket = io.connect('http://vikhan.herokuapp.com/');
+var socket = io.connect('http://localhost:8080/');
 var myUser ='5fc05b70d2b6a82f10235ded';
-var myToken ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmYzA1YjcwZDJiNmE4MmYxMDIzNWRlZCIsImlhdCI6MTYwNzI2MTE3OSwiZXhwIjoxNjA3MzQ3NTc5fQ.Nchpp2czWSmLPxEM4NZKHWZgVo3Fbx0BXsSOUTRpeAw';
+var myToken ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmYzA1YjcwZDJiNmE4MmYxMDIzNWRlZCIsImlhdCI6MTYwNzU2OTc5NSwiZXhwIjoxNjA3NjU2MTk1fQ.gUWKqEHuHHqnhqB8Q5zTfZCdnVThVR7FJqVoSyqwvHY';
 
 console.log('run socket client');
 socket.on('connect', function(){
@@ -9,6 +9,9 @@ socket.on('connect', function(){
     socket.emit('login',myToken);
 });
 socket.on('data_room', function(data){
+    //console.log(data);
+});
+socket.on('data_cube_room', function(data){
     console.log(data);
 });
 socket.on('log', function(data){
@@ -16,11 +19,11 @@ socket.on('log', function(data){
 });
 
 socket.on('data_area',function(data){
-    console.log(data);
+    //console.log(data);
 })
 
 socket.on('notification', function(data){
-    console.log(data);
+    //console.log(data);
 });
 
 

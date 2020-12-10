@@ -1,117 +1,52 @@
-const FakeData = [
-  {
-    id: "118",
-    value: -11.88,
-    x: 0,
-    y: 0,
-    z: 0,
-  },
-  {
-    id: "112",
-    value: -11.11,
-    x: 53,
-    y: 0,
-    z: 0,
-  },
-  {
-    id: "107",
-    value: -6.33,
-    x: 0,
-    y: 22,
-    z: 0,
-  },
-  {
-    id: "101",
-    value: -12.00,
-    x: 53,
-    y: 22,
-    z: 0,
-  },
-  {
-    id: "116",
-    value: -8.33,
-    x: 0,
-    y: 0,
-    z: 25,
-  },
-  {
-    id: "110",
-    value: -6.07,
-    x: 53,
-    y: 0,
-    z: 25,
-  },
-  {
-    id: "109",
-    value: -9.61,
-    x: 0,
-    y: 22,
-    z: 25,
-  },
-  {
-    id: "103",
-    value: -9.77,
-    x: 53,
-    y: 22,
-    z: 25,
-  }
-  /* {
-    id: "119",
-    value: -16.36,
-    x: 26,
-    y: 11,
-    z: 12,
-  },
-  {
-    id: "120",
-    value: -16.54,
-    x: 13,
-    y: 0,
-    z: 0,
-  }, 
-  {
-    id: "121",
-    value: -16.32,
-    x: 37,
-    y: 22,
-    z: 18,
-  }, */
-];
-
-const WareHouseConfig = {
-  id: "room00001",
-  name: "Phòng A1",
-  description: "Phòng thí nghiệm chuyên sâu 1",
-  size: {
-    x: 540,
-    y: 230,
-    z: 260,
-  },
-  sensorDensity: 10,
-};
 const interpolation = require("./interpolation").Interpolation;
-function MainFunc(data, config) {
+
+exports.NoiSuyBaChieu = (data, config) => {
+  let tempArray= data.map(fd => fd.value);
   const density = config.sensorDensity;
-  const xBlock = config.size.x / density;
-  const yBlock = config.size.y / density;
-  const zBlock = config.size.z / density;
+  const xBlock = config.size.x / density -1;
+  const yBlock = config.size.y / density -1;
+  const zBlock = config.size.z / density -1;
 
   let result = new Array();
-  for (let x = 0; x < xBlock; x++) {
+  for (let x = 0; x <= xBlock; x++) {
     result[x] = new Array();
-    for (let y = 0; y < yBlock; y++) {
+    for (let y = 0; y <= yBlock; y++) {
       result[x][y] = new Array();
-      for (let z = 0; z < zBlock; z++) {
+      for (let z = 0; z <= zBlock; z++) {
         result[x][y][z] = null;
       }
     }
   }
+  if(data.length ===0) return result;
+  var total = 0;
+  for(var i = 0; i < data.length; i++) {
+      total += data[i].value;
+  }
+  var avg = total / data.length;
+  let copyData = data.map(dt=>{
+    return {
+      x: dt.x,
+      y: dt.y,
+      z: dt.z
+    }
+  });
+  
+  if(!copyData.find(e=>(e.x === 0 && e.y === 0 && e.z === 0))) data.push({x:0,y:0,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === 0 && e.z === zBlock))) data.push({x:0,y:0,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === yBlock && e.z === 0))) data.push({x:0,y:yBlock,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === yBlock && e.z === zBlock))) data.push({x:0,y:yBlock,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === 0 && e.z === 0))) data.push({x:xBlock,y:0,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === 0 && e.z === zBlock))) data.push({x:xBlock,y:0,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === yBlock && e.z === 0))) data.push({x:xBlock,y:yBlock,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === yBlock && e.z === zBlock))) data.push({x:xBlock,y:yBlock,z:zBlock, value:avg});
+
+
   data.map((item) => {
     result[item.x][item.y][item.z] = item.value;
   });
   //result[x][y][z]
 
-  recursive(0, 0, 0, xBlock - 1, yBlock - 1, zBlock - 1);
+  recursive(0, 0, 0, xBlock, yBlock, zBlock);
 
   function recursive(x0, y0, z0, x1, y1, z1) {
     function DivCube(xx0, yy0, zz0, xx1, yy1, zz1) {
@@ -288,10 +223,5 @@ function MainFunc(data, config) {
       }
     }
   }
-  let tempArray= FakeData.map(fd => fd.value);
   return {values: result,max:Math.max(...tempArray),min: Math.min(...tempArray)};
 }
-
-exports.Fake = () => {
-  return MainFunc(FakeData, WareHouseConfig);
-};

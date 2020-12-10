@@ -5,7 +5,7 @@ module.exports = function (app) {
   app.get("/api/room/data/current/",[authJwt.verifyToken],controller.getCurrent);
 
   /* Demo Get Data For Dev -------------------------------------*/
-  app.get("/api/room/data/getDemoData", controller.getDemoData);
+  app.get("/api/room/data/getCubeData", controller.getCubeData);
 
   /* Get Curren data of Sensor Activate*/
   app.get("/api/room/data/sensor",[authJwt.verifyToken],controller.getSensorData);

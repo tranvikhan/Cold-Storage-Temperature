@@ -48,21 +48,44 @@ exports.Get =(data, config, areas)=> {
 const getInterpolation = (data, config, areas)=>{
   
   const density = config.sensorDensity;
-  const xBlock = config.size.x / density;
-  const yBlock = config.size.y / density;
-  const zBlock = config.size.z / density;
+  const xBlock = config.size.x / density -1;
+  const yBlock = config.size.y / density -1;
+  const zBlock = config.size.z / density -1;
 
   let result = new Array();
-
-  for (let x = 0; x < xBlock; x++) {
+  for (let x = 0; x <= xBlock; x++) {
     result[x] = new Array();
-    for (let y = 0; y < yBlock; y++) {
+    for (let y = 0; y <= yBlock; y++) {
       result[x][y] = new Array();
-      for (let z = 0; z < zBlock; z++) {
+      for (let z = 0; z <= zBlock; z++) {
         result[x][y][z] = null;
       }
     }
   }
+  if(data.length ===0) return result;
+  var total = 0;
+  for(var i = 0; i < data.length; i++) {
+      total += data[i].value;
+  }
+  var avg = total / data.length;
+  let copyData = data.map(dt=>{
+    return {
+      x: dt.x,
+      y: dt.y,
+      z: dt.z
+    }
+  });
+  
+  if(!copyData.find(e=>(e.x === 0 && e.y === 0 && e.z === 0))) data.push({x:0,y:0,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === 0 && e.z === zBlock))) data.push({x:0,y:0,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === yBlock && e.z === 0))) data.push({x:0,y:yBlock,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === 0 && e.y === yBlock && e.z === zBlock))) data.push({x:0,y:yBlock,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === 0 && e.z === 0))) data.push({x:xBlock,y:0,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === 0 && e.z === zBlock))) data.push({x:xBlock,y:0,z:zBlock, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === yBlock && e.z === 0))) data.push({x:xBlock,y:yBlock,z:0, value:avg});
+  if(!copyData.find(e=>(e.x === xBlock && e.y === yBlock && e.z === zBlock))) data.push({x:xBlock,y:yBlock,z:zBlock, value:avg});
+
+
   data.map((item) => {
     result[item.x][item.y][item.z] = item.value;
   });
