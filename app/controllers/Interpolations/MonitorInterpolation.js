@@ -16,7 +16,7 @@ exports.Get =(data, config, areas)=> {
       }
       sum = sum + item.value;
     });
-    if(count <8){
+    if(count <= 8){
       return areas.map(area => {
         let temp_count =0;
         let temp_sum =0;
@@ -277,79 +277,80 @@ const getInterpolation = (data, config, areas)=>{
     if (check) {
       /* console.log("tinh noi suy"); */
       areas = areas.map(area =>{
+          let sum;let counts;let average;
           //000
           if(area.size.x0 >= x0 && area.size.y0 >=y0 && area.size.z0 >=z0 && 
             area.size.x0 <= x1 && area.size.y0 <=y1 && area.size.z0 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x0,area.size.y0,area.size.z0)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              area.sum = interpolationArea(area.size.x0,area.size.y0,area.size.z0)+ sum;
+              average = area.sum/counts;
             }
           //001
           if(area.size.x0 >= x0 && area.size.y0 >=y0 && area.size.z1 >=z0 && 
             area.size.x0 <= x1 && area.size.y0 <=y1 && area.size.z1 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x0,area.size.y0,area.size.z1)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x0,area.size.y0,area.size.z1)+ sum;
+              average = sum/counts;
             }
           //010
           if(area.size.x0 >= x0 && area.size.y1 >=y0 && area.size.z0 >=z0 && 
             area.size.x0 <= x1 && area.size.y1 <=y1 && area.size.z0 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x0,area.size.y1,area.size.z0)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x0,area.size.y1,area.size.z0)+ sum;
+              average = sum/counts;
             } 
           //011
           if(area.size.x0 >= x0 && area.size.y1 >=y0 && area.size.z1 >=z0 && 
             area.size.x0 <= x1 && area.size.y1 <=y1 && area.size.z1 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x0,area.size.y1,area.size.z1)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x0,area.size.y1,area.size.z1)+ sum;
+              average = sum/counts;
             }
           //100
           if(area.size.x1 >= x0 && area.size.y0 >=y0 && area.size.z0 >=z0 && 
             area.size.x1 <= x1 && area.size.y0 <=y1 && area.size.z0 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x1,area.size.y0,area.size.z0)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x1,area.size.y0,area.size.z0)+ sum;
+              average = sum/counts;
             }
           //101
           if(area.size.x1 >= x0 && area.size.y0 >=y0 && area.size.z1 >=z0 && 
             area.size.x1 <= x1 && area.size.y0 <=y1 && area.size.z1 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x1,area.size.y0,area.size.z1)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x1,area.size.y0,area.size.z1)+ sum;
+              average = sum/counts;
           } 
           //110
           if(area.size.x1 >= x0 && area.size.y1 >=y0 && area.size.z0 >=z0 && 
             area.size.x1 <= x1 && area.size.y1 <=y1 && area.size.z0 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x1,area.size.y1,area.size.z0)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x1,area.size.y1,area.size.z0)+ sum;
+              average = sum/counts;
           }        
           //111
           if(area.size.x1 >= x0 && area.size.y1 >=y0 && area.size.z1 >=z0 && 
             area.size.x1 <= x1 && area.size.y1 <=y1 && area.size.z1 <=z1){
-              if(!area.sum) area.sum =0;
-              if(!area.count) area.count =0;
-              area.count = area.count +1;
-              area.sum = interpolationArea(area.size.x1,area.size.y1,area.size.z1)+ area.sum;
-              area.average = area.sum/area.count;
+              sum =0;
+              counts =0;
+              counts = counts +1;
+              sum = interpolationArea(area.size.x1,area.size.y1,area.size.z1)+ sum;
+              average = sum/counts;
           }
-          return area;
+          return {...area,average: average,count:counts};
 
       })
       
