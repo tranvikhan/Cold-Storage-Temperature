@@ -92,7 +92,7 @@ const getInterpolation = (data, config, areas)=>{
   });
   //result[x][y][z]
 
-  recursive(0, 0, 0, xBlock - 1, yBlock - 1, zBlock - 1);
+  recursive(0, 0, 0, xBlock, yBlock, zBlock);
 
   function recursive(x0, y0, z0, x1, y1, z1) {
     function DivCube(xx0, yy0, zz0, xx1, yy1, zz1) {
