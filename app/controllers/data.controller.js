@@ -364,7 +364,7 @@ const FakeData = (rows,io,index)=>{
         }
         setTimeout(()=>{
             FakeData(rows,io,newIndex);
-        },30000); 
+        },10000); 
         
     });
 }
