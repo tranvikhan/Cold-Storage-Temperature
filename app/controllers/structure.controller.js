@@ -60,11 +60,11 @@ exports.addStructureSensor = (req,res)=>{
                         sensor.isUsed = true;
                         sensor.save()
                         .then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:{...newStructure,sensor:{
+                            req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:{...newStructure._doc,sensor:{
                                 _id:sensor._id,
                                 name:sensor.name
                             }}});
-                            result.Ok(res,{structure:{...newStructure,sensor:{
+                            result.Ok(res,{structure:{...newStructure._doc,sensor:{
                                 _id:sensor._id,
                                 name:sensor.name
                             }}});
@@ -123,11 +123,11 @@ exports.editStructureSensor =(req,res)=>{
                         }
                     });
                     newStructure.save().then(()=>{
-                        req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure,sensor:{
+                        req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure._doc,sensor:{
                             _id:sensor._id,
                             name:sensor.name
                         }}});
-                        result.Ok(res,{structure:{...newStructure,sensor:{
+                        result.Ok(res,{structure:{...newStructure._doc,sensor:{
                             _id:sensor._id,
                             name:sensor.name
                         }}});
@@ -171,11 +171,11 @@ exports.deleteStructureSensor =(req,res)=>{
                     newStructure.save().then(()=>{
                         sensor.isUsed = false;
                         sensor.save().then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure,sensor:{
+                            req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure._doc,sensor:{
                                 _id:sensor._id,
                                 name:sensor.name
                             }}});
-                            result.Ok(res,{structure:{...newStructure,sensor:{
+                            result.Ok(res,{structure:{...newStructure._doc,sensor:{
                                 _id:sensor._id,
                                 name:sensor.name
                             }}});
