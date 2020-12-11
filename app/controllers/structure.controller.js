@@ -60,14 +60,24 @@ exports.addStructureSensor = (req,res)=>{
                         sensor.isUsed = true;
                         sensor.save()
                         .then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:{...newStructure._doc,sensor:{
-                                _id:sensor._id,
-                                name:sensor.name
-                            }}});
-                            result.Ok(res,{structure:{...newStructure._doc,sensor:{
-                                _id:sensor._id,
-                                name:sensor.name
-                            }}});
+                            Structure
+                            .findOne({ room: req.body.room_id},{_id:0,room:0,})
+                            .populate({
+                                path: 'map',
+                                populate: { path: 'sensor' ,select:'name _id deviceId' },
+                            })
+                            .sort({"createdAt":-1})
+                            .exec((err,Zstructure)=>{
+                                if(err){
+                                    result.ServerError(res,err)
+                                    return;
+                                }
+                                if(Zstructure){
+                                    req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:Zstructure});
+                                    result.Ok(res,{structure:Zstructure});
+                                }
+                            });
+                            
                         })
                         .catch(err=>{
                             result.ServerError(res,err)
@@ -123,14 +133,23 @@ exports.editStructureSensor =(req,res)=>{
                         }
                     });
                     newStructure.save().then(()=>{
-                        req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure._doc,sensor:{
-                            _id:sensor._id,
-                            name:sensor.name
-                        }}});
-                        result.Ok(res,{structure:{...newStructure._doc,sensor:{
-                            _id:sensor._id,
-                            name:sensor.name
-                        }}});
+                        Structure
+                        .findOne({ room: req.body.room_id},{_id:0,room:0,})
+                        .populate({
+                            path: 'map',
+                            populate: { path: 'sensor' ,select:'name _id deviceId' },
+                        })
+                        .sort({"createdAt":-1})
+                        .exec((err,Zstructure)=>{
+                            if(err){
+                                result.ServerError(res,err)
+                                return;
+                            }
+                            if(Zstructure){
+                                req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:Zstructure});
+                                result.Ok(res,{structure:Zstructure});
+                            }
+                        });
                     }).catch(err=>{
                         result.ServerError(res,err)
                     })
@@ -171,14 +190,23 @@ exports.deleteStructureSensor =(req,res)=>{
                     newStructure.save().then(()=>{
                         sensor.isUsed = false;
                         sensor.save().then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure._doc,sensor:{
-                                _id:sensor._id,
-                                name:sensor.name
-                            }}});
-                            result.Ok(res,{structure:{...newStructure._doc,sensor:{
-                                _id:sensor._id,
-                                name:sensor.name
-                            }}});
+                            Structure
+                            .findOne({ room: req.body.room_id},{_id:0,room:0,})
+                            .populate({
+                                path: 'map',
+                                populate: { path: 'sensor' ,select:'name _id deviceId' },
+                            })
+                            .sort({"createdAt":-1})
+                            .exec((err,Zstructure)=>{
+                                if(err){
+                                    result.ServerError(res,err)
+                                    return;
+                                }
+                                if(Zstructure){
+                                    req.io.to('room'+req.body.room_id).emit('structure',{message:'delete',data:Zstructure});
+                                    result.Ok(res,{structure:Zstructure});
+                                }
+                            });
                         })
                         
                     }).catch(err=>{
