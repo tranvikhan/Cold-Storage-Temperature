@@ -60,8 +60,14 @@ exports.addStructureSensor = (req,res)=>{
                         sensor.isUsed = true;
                         sensor.save()
                         .then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:newStructure});
-                            result.Ok(res,{structure:newStructure});
+                            req.io.to('room'+req.body.room_id).emit('structure',{message:'add',data:{...newStructure,sensor:{
+                                _id:sensor._id,
+                                name:sensor.name
+                            }}});
+                            result.Ok(res,{structure:{...newStructure,sensor:{
+                                _id:sensor._id,
+                                name:sensor.name
+                            }}});
                         })
                         .catch(err=>{
                             result.ServerError(res,err)
@@ -117,8 +123,14 @@ exports.editStructureSensor =(req,res)=>{
                         }
                     });
                     newStructure.save().then(()=>{
-                        req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:newStructure});
-                        result.Ok(res,{structure:newStructure});
+                        req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure,sensor:{
+                            _id:sensor._id,
+                            name:sensor.name
+                        }}});
+                        result.Ok(res,{structure:{...newStructure,sensor:{
+                            _id:sensor._id,
+                            name:sensor.name
+                        }}});
                     }).catch(err=>{
                         result.ServerError(res,err)
                     })
@@ -159,8 +171,14 @@ exports.deleteStructureSensor =(req,res)=>{
                     newStructure.save().then(()=>{
                         sensor.isUsed = false;
                         sensor.save().then(()=>{
-                            req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:newStructure});
-                            result.Ok(res,{structure:newStructure});
+                            req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:{...newStructure,sensor:{
+                                _id:sensor._id,
+                                name:sensor.name
+                            }}});
+                            result.Ok(res,{structure:{...newStructure,sensor:{
+                                _id:sensor._id,
+                                name:sensor.name
+                            }}});
                         })
                         
                     }).catch(err=>{
