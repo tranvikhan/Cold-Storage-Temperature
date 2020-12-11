@@ -118,7 +118,7 @@ exports.editStructureSensor =(req,res)=>{
                     });
                     newStructure.save().then(()=>{
                         req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:newStructure});
-                        res.status(200).send(newStructure);
+                        result.Ok(res,{structure:newStructure});
                     }).catch(err=>{
                         result.ServerError(res,err)
                     })
@@ -160,7 +160,7 @@ exports.deleteStructureSensor =(req,res)=>{
                         sensor.isUsed = false;
                         sensor.save().then(()=>{
                             req.io.to('room'+req.body.room_id).emit('structure',{message:'update',data:newStructure});
-                            res.status(200).send(newStructure);
+                            result.Ok(res,{structure:newStructure});
                         })
                         
                     }).catch(err=>{
