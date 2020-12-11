@@ -68,7 +68,8 @@ const getInterpolation = (data, config, areas)=>{
       total += data[i].value;
   }
   var avg = total / data.length;
-  let copyData = data.map(dt=>{
+  let copyData = [...data];
+  copyData = copyData.map(dt=>{
     return {
       x: dt.x,
       y: dt.y,
@@ -275,7 +276,7 @@ const getInterpolation = (data, config, areas)=>{
 
     if (check) {
       /* console.log("tinh noi suy"); */
-      areas.map(area =>{
+      areas = areas.map(area =>{
           //000
           if(area.size.x0 >= x0 && area.size.y0 >=y0 && area.size.z0 >=z0 && 
             area.size.x0 <= x1 && area.size.y0 <=y1 && area.size.z0 <=z1){
@@ -348,7 +349,7 @@ const getInterpolation = (data, config, areas)=>{
               area.sum = interpolationArea(area.size.x1,area.size.y1,area.size.z1)+ area.sum;
               area.average = area.sum/area.count;
           }
-
+          return area;
 
       })
       
