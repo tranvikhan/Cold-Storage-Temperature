@@ -2,6 +2,7 @@ const db = require("../models");
 const Access = db.access;
 const Notification = db.notification;
 const result = require("../helps/result.helps");
+const User = require("../models/user.model");
 
 /* Get Room Access List-------------------------------------*/
 exports.getRoomAccess = (req, res) => {
@@ -48,10 +49,15 @@ exports.addAccess = (req, res) => {
         obj_id: access._id
       });
       newNotification.save().then((notification)=>{
-        req.io.to('user'+notification.user).emit('notification', {message:'add',data:notification});
-        req.io.to('room'+access.room).emit('access',{message:'invite',data:{access}})
-        result.Ok(res,{access:access});
-        
+        User.findById(req.body.user_id).exec((err,user)=>{
+          if (err) {
+            result.ServerError(res,err);
+            return;
+          }
+          req.io.to('user'+notification.user).emit('notification', {message:'add',data:notification});
+          req.io.to('room'+access.room).emit('access',{message:'invite',data:{access:{...access._doc,user:user}}})
+          result.Ok(res,{access:{...access._doc,user:user}});
+        })
       }).catch(err=>{
         result.ServerError(res,err);
       })
@@ -65,7 +71,7 @@ exports.addAccess = (req, res) => {
 
 /* Edit Room Access -------------------------------------*/
 exports.editAccess = (req, res) => {
-  Access.findById(req.body.access_id).exec((err, access) => {
+  Access.findById(req.body.access_id).populate("user",'fullname avatar _id  username email').exec((err, access) => {
     if (err) {
       result.ServerError(res,err);
       return;
@@ -112,7 +118,7 @@ exports.deleteAccess = (req, res) => {
 exports.replyAccess = (req,res)=>{
   if(req.body.accepted!=null && req.body.accepted){
     // Chap nhan
-    Access.findById(req.body.access_id).exec((err, access) => {
+    Access.findById(req.body.access_id).populate("user",'fullname avatar _id  username email').exec((err, access) => {
       if (err) {
         result.ServerError(res,err);
         return;
