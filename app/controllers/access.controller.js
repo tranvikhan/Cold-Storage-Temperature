@@ -20,7 +20,7 @@ exports.getRoomAccess = (req, res) => {
 
 /* Get User Access List-------------------------------------*/
 exports.getUserAccess = (req, res) => {
-  Access.find({ room: req.body.room_id},{_id:0,role:1,room:1,accepted:1})
+  Access.find({ room: req.body.room_id},{_id:1,role:1,room:1,accepted:1})
     .populate("user",'fullname avatar _id  username email')
     .exec((err, accesses) => {
       if (err) {
