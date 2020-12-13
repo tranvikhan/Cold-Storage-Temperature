@@ -49,7 +49,7 @@ exports.addAccess = (req, res) => {
         obj_id: access._id
       });
       newNotification.save().then((notification)=>{
-        User.findById(req.body.user_id).exec((err,user)=>{
+        User.find({_id:req.body.user_id},{fullname:1,avatar:1,_id:1,username:1,email:1}).exec((err,user)=>{
           if (err) {
             result.ServerError(res,err);
             return;
