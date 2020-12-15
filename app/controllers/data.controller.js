@@ -383,6 +383,56 @@ const sendDataToRoom = (io) => {
       return;
     }
     rooms.map((room) => {
+      //Send sensor data to client
+      Activate.find({ room: room._id }).exec((err, activates) => {
+        if (err) {
+          result.ServerError(res, err);
+          return;
+        }
+        if (activates.length > 0) {
+          activates.map((activate) => {
+            Sensor.find({ activate: activate._id }).exec((err, sensors) => {
+              if (err) {
+                result.ServerError(res, err);
+                return;
+              }
+              if (sensors) {
+                if (global.currentData != null) {
+                  let data = new Array();
+                  let realtimeData;
+
+                  sensors.map((sensorX) => {
+                    realtimeData = global.currentData.find((sensor) => {
+                      return sensor.data_id === sensorX.data_id;
+                    });
+                    data.push({
+                      _id: sensorX._id,
+                      datatype_id: sensorX.datatype_id,
+                      data_id: sensorX.data_id,
+                      value: realtimeData.data_value,
+                      name: sensorX.name,
+                      status:
+                        realtimeData.data_value > 99
+                          ? "OFF"
+                          : sensorX.isUsed
+                          ? "RUNNING"
+                          : "ON",
+                    });
+                  });
+                  io.to("room" + room._id).emit("data_sensor", {
+                    room: room._id,
+                    datas: data,
+                    time: realtimeData.data_createdDate,
+                  });
+                }
+              }
+            });
+          });
+        }
+      });
+
+      //Send current data (location + value) to client
+
       Structure.findOne({ room: room._id })
         .populate({
           path: "map",
@@ -396,8 +446,10 @@ const sendDataToRoom = (io) => {
           }
           if (structure != null && global.currentData != null) {
             let data = new Array();
-            let realtimeData;
-            let areaThemp;
+            let realtimeData = null;
+            let areaThemp = null;
+            let cubeDataCurrent = null;
+
             structure.map.map((st) => {
               realtimeData = global.currentData.find((sensor) => {
                 return sensor.data_id === st.sensor.data_id;
@@ -419,17 +471,25 @@ const sendDataToRoom = (io) => {
               });
             });
             if (realtimeData) {
+              // Current data---------------------------------------------------
               io.to("room" + room._id).emit("data_room", {
                 room: room._id,
                 datas: data,
                 time: realtimeData.data_createdDate,
               });
-              io.to("room" + room._id).emit("data_cube_room", {
-                room: room._id,
-                cubeData: NoiSuyBaChieu([...data], room),
-                time: realtimeData.data_createdDate,
-              });
+
+              // Cube data ------------------------------------------------------
+
+              cubeDataCurrent = NoiSuyBaChieu([...data], room);
+              if (cubeDataCurrent)
+                io.to("room" + room._id).emit("data_cube_room", {
+                  room: room._id,
+                  cubeData: cubeDataCurrent,
+                  time: realtimeData.data_createdDate,
+                });
             }
+
+            //Send area Data ---------------------------------------
 
             Area.find({ room: room._id }).exec((err, areas) => {
               if (err) {
@@ -437,70 +497,133 @@ const sendDataToRoom = (io) => {
                 return;
               }
               if (areas != null && areas.length > 0 && data.length > 0) {
-                //console.log(data,room,areas);
                 areaThemp = interpolationArea.Get(data, room, areas);
-                //console.log(areaThemp);
 
-                io.to("room" + room._id).emit("data_area", {
-                  room: room._id,
-                  areas: areaThemp,
-                  time: realtimeData.data_createdDate,
-                });
+                if (areaThemp) {
+                  //Send Area Data-----------------------------------------------------------------------
+                  io.to("room" + room._id).emit("data_area", {
+                    room: room._id,
+                    areas: areaThemp,
+                    time: realtimeData.data_createdDate,
+                  });
 
-                areaThemp.map((area) => {
-                  if (area.monitorOn) {
-                    area.monitors.map((monitor) => {
-                      let isTimeChecked = checkTime(
-                        realtimeData.data_createdDate,
-                        monitor.times
-                      );
+                  //Cheack notification
+                  areaThemp.map((area) => {
+                    if (area.monitorOn) {
+                      area.monitors.map((monitor) => {
+                        let isTimeChecked = checkTime(
+                          realtimeData.data_createdDate,
+                          monitor.times
+                        );
 
-                      if (
-                        isTimeChecked &&
-                        monitor.active &&
-                        (area.average < monitor.temperature.min ||
-                          area.average > monitor.temperature.max)
-                      ) {
-                        let type =
-                          area.average < monitor.temperature.min
-                            ? "WARRING_LOW_TEMPERATURE"
-                            : "WARRING_HIGH_TEMPERATURE";
-                        Access.find(
-                          { room: area.room },
-                          { _id: 0, role: 1, room: 1, accepted: 1 }
-                        )
-                          .populate(
-                            "user",
-                            "fullname avatar _id  username email"
+                        if (
+                          isTimeChecked &&
+                          monitor.active &&
+                          (area.average < monitor.temperature.min ||
+                            area.average > monitor.temperature.max)
+                        ) {
+                          let type =
+                            area.average < monitor.temperature.min
+                              ? "WARRING_LOW_TEMPERATURE"
+                              : "WARRING_HIGH_TEMPERATURE";
+                          Access.find(
+                            { room: area.room },
+                            { _id: 0, role: 1, room: 1, accepted: 1 }
                           )
-                          .exec((err, accesses) => {
-                            if (err) {
-                              return;
-                            }
-                            if (accesses.length > 0) {
-                              accesses.map((access) => {
-                                Notification.findOne({
-                                  user: access.user._id,
-                                  obj_id: area._id,
-                                  type: type,
-                                  ref: "Area",
-                                })
-                                  .sort({ createdAt: -1 })
-                                  .exec((err, notification) => {
-                                    if (err) {
-                                      return;
-                                    }
-                                    if (notification) {
-                                      let notificationHouse = new Date(
-                                        notification.createdAt
-                                      );
-                                      let currentTime = new Date();
-                                      if (
-                                        (currentTime - notificationHouse) /
-                                          1000 /
-                                          60 >
-                                        59
-                                      ) {
+                            .populate(
+                              "user",
+                              "fullname avatar _id  username email"
+                            )
+                            .exec((err, accesses) => {
+                              if (err) {
+                                return;
+                              }
+                              if (accesses.length > 0) {
+                                accesses.map((access) => {
+                                  Notification.findOne({
+                                    user: access.user._id,
+                                    obj_id: area._id,
+                                    type: type,
+                                    ref: "Area",
+                                  })
+                                    .sort({ createdAt: -1 })
+                                    .exec((err, notification) => {
+                                      if (err) {
+                                        return;
+                                      }
+                                      if (notification) {
+                                        let notificationHouse = new Date(
+                                          notification.createdAt
+                                        );
+                                        let currentTime = new Date();
+                                        if (
+                                          (currentTime - notificationHouse) /
+                                            1000 /
+                                            60 >
+                                          59
+                                        ) {
+                                          let newNotification = new Notification(
+                                            {
+                                              user: access.user._id,
+                                              ref: "Area",
+                                              content:
+                                                "Cảnh báo nhiệt độ khu vực " +
+                                                area.name +
+                                                " có nhiệt độ " +
+                                                Math.round(area.average * 100) /
+                                                  100 +
+                                                "°C",
+                                              type: type,
+                                              obj_id: area._id,
+                                            }
+                                          );
+                                          newNotification
+                                            .save()
+                                            .then((notificationX) => {
+                                              io.to("room" + area.room).emit(
+                                                "notification",
+                                                {
+                                                  message: "add",
+                                                  data: notificationX,
+                                                }
+                                              );
+                                            });
+                                          if (area.emailOn) {
+                                            mailler
+                                              .sendMail(
+                                                access.user.email,
+                                                "CẢNH BÁO NHIỆT ĐỘ",
+                                                htmlData(
+                                                  access.user,
+                                                  room,
+                                                  area,
+                                                  monitor,
+                                                  type
+                                                )
+                                              )
+                                              .then()
+                                              .catch((err) => {
+                                                //return;
+                                              });
+                                          }
+                                        } else {
+                                          notification.content =
+                                            "Cảnh báo nhiệt độ khu vực " +
+                                            area.name +
+                                            " có nhiệt độ " +
+                                            Math.round(area.average * 100) /
+                                              100 +
+                                            "°C";
+                                          notification.save();
+                                          io.to("room" + area.room).emit(
+                                            "notification",
+                                            {
+                                              message: "update",
+                                              data: notification,
+                                            }
+                                          );
+                                        }
+                                      } else {
                                         let newNotification = new Notification({
                                           user: access.user._id,
                                           ref: "Area",
@@ -517,93 +640,42 @@ const sendDataToRoom = (io) => {
                                         newNotification
                                           .save()
                                           .then((notificationX) => {
-                                            io.to(
-                                              "room" + area.room
-                                            ).emit("notification", {
-                                              message: "add",
-                                              data: notificationX,
-                                            });
-                                          });
-                                        if (area.emailOn) {
-                                          mailler
-                                            .sendMail(
-                                              access.user.email,
-                                              "CẢNH BÁO NHIỆT ĐỘ",
-                                              htmlData(
-                                                access.user,
-                                                room,
-                                                area,
-                                                monitor,
-                                                type
-                                              )
-                                            )
-                                            .then()
-                                            .catch((err) => {
-                                              return;
-                                            });
-                                        }
-                                      } else {
-                                        notification.content =
-                                          "Cảnh báo nhiệt độ khu vực " +
-                                          area.name +
-                                          " có nhiệt độ " +
-                                          Math.round(area.average * 100) / 100 +
-                                          "°C";
-                                        notification.save();
-                                        io.to(
-                                          "room" + area.room
-                                        ).emit("notification", {
-                                          message: "update",
-                                          data: notification,
-                                        });
-                                      }
-                                    } else {
-                                      let newNotification = new Notification({
-                                        user: access.user._id,
-                                        ref: "Area",
-                                        content:
-                                          "Cảnh báo nhiệt độ khu vực " +
-                                          area.name +
-                                          " có nhiệt độ " +
-                                          Math.round(area.average * 100) / 100 +
-                                          "°C",
-                                        type: type,
-                                        obj_id: area._id,
-                                      });
-                                      newNotification.save();
-                                      io.to(
-                                        "room" + area.room
-                                      ).emit("notification", {
-                                        message: "add",
-                                        data: newNotification,
-                                      });
-                                      if (area.emailOn) {
-                                        mailler
-                                          .sendMail(
-                                            access.user.email,
-                                            "CẢNH BÁO NHIỆT ĐỘ",
-                                            htmlData(
-                                              access.user,
-                                              room,
-                                              area,
-                                              monitor,
-                                              type
-                                            )
-                                          )
-                                          .then()
-                                          .catch((err) => {
-                                            return;
+                                            io.to("room" + area.room).emit(
+                                              "notification",
+                                              {
+                                                message: "add",
+                                                data: notificationX,
+                                              }
+                                            );
+                                            if (area.emailOn) {
+                                              mailler
+                                                .sendMail(
+                                                  access.user.email,
+                                                  "CẢNH BÁO NHIỆT ĐỘ",
+                                                  htmlData(
+                                                    access.user,
+                                                    room,
+                                                    area,
+                                                    monitor,
+                                                    type
+                                                  )
+                                                )
+                                                .then()
+                                                .catch((err) => {
+                                                  return;
+                                                });
+                                            }
                                           });
                                       }
-                                    }
-                                  });
-                              });
-                            }
-                          });
-                      }
-                    });
-                  }
-                });
+                                    });
+                                });
+                              }
+                            });
+                        }
+                      });
+                    }
+                  });
+                }
               }
             });
           }

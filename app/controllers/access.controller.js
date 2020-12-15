@@ -69,7 +69,11 @@ exports.addAccess = (req, res) => {
               .emit("notification", { message: "add", data: notification });
             req.io.to("room" + access.room).emit("access", {
               message: "invite",
-              data: { access: { ...access._doc, user: user } },
+              data: {
+                actionBy: req.userId,
+                room: { _id: req.body.room_id },
+                access: { ...access._doc, user: user },
+              },
             });
             result.Ok(res, { access: { ...access._doc, user: user } });
           });
@@ -96,9 +100,14 @@ exports.editAccess = (req, res) => {
       access
         .save()
         .then(() => {
-          req.io
-            .to("room" + access.room)
-            .emit("access", { message: "edit", data: { access } });
+          req.io.to("room" + access.room).emit("access", {
+            message: "edit",
+            data: {
+              actionBy: req.userId,
+              room: { _id: req.body.room_id },
+              access: access,
+            },
+          });
           result.Ok(res, { access: access });
         })
         .catch((err) => {
@@ -120,9 +129,14 @@ exports.deleteAccess = (req, res) => {
           result.ServerError(res, err);
           return;
         }
-        req.io
-          .to("room" + access.room)
-          .emit("access", { message: "delete", data: { access } });
+        req.io.to("room" + access.room).emit("access", {
+          message: "delete",
+          data: {
+            actionBy: req.userId,
+            room: { _id: req.body.room_id },
+            access: { _id: access_id },
+          },
+        });
         result.Ok(res, "Xóa thành công");
       });
     } else {
@@ -147,12 +161,22 @@ exports.replyAccess = (req, res) => {
           access
             .save()
             .then((newAccess) => {
-              req.io
-                .to("user" + access.user)
-                .emit("access", { message: "add", data: { newAccess } });
-              req.io
-                .to("room" + access.room)
-                .emit("access", { message: "accepted", data: { newAccess } });
+              req.io.to("user" + access.user).emit("access", {
+                message: "add",
+                data: {
+                  actionBy: req.userId,
+                  room: { _id: req.body.room_id },
+                  access: newAccess,
+                },
+              });
+              req.io.to("room" + access.room).emit("access", {
+                message: "accepted",
+                data: {
+                  actionBy: req.userId,
+                  room: { _id: req.body.room_id },
+                  access: newAccess,
+                },
+              });
               result.Ok(res, { access: newAccess });
             })
             .catch((err) => {
@@ -169,6 +193,14 @@ exports.replyAccess = (req, res) => {
         result.ServerError(res, err);
         return;
       }
+      req.io.to("room" + access.room).emit("access", {
+        message: "delete",
+        data: {
+          actionBy: req.userId,
+          room: { _id: req.body.room_id },
+          access: { _id: access_id },
+        },
+      });
       result.Ok(res, "Từ chối thành công");
     });
   }
