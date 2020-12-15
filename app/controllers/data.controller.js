@@ -237,10 +237,10 @@ exports.getSensorData = (req, res) => {
                   name: sensorX.name,
                   status:
                     realtimeData.data_value > 99
-                      ? st.sensor.isUsed
+                      ? sensorX.isUsed
                         ? "USSING"
                         : "OFF"
-                      : st.sensor.isUsed
+                      : sensorX.isUsed
                       ? "RUNNING"
                       : "ON",
                 });
@@ -423,10 +423,10 @@ const sendDataToRoom = (io) => {
                       name: sensorX.name,
                       status:
                         realtimeData.data_value > 99
-                          ? st.sensor.isUsed
+                          ? sensorX.isUsed
                             ? "USSING"
                             : "OFF"
-                          : st.sensor.isUsed
+                          : sensorX.isUsed
                           ? "RUNNING"
                           : "ON",
                     });
