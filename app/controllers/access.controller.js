@@ -1,7 +1,7 @@
 const db = require("../models");
 const Access = db.access;
 const Notification = db.notification;
-const Room = db.room,
+const Room = db.room;
 const result = require("../helps/result.helps");
 const User = require("../models/user.model");
 
