@@ -154,45 +154,47 @@ exports.removeActivate = (req, res) => {
         return;
       }
       Activate.find({ room: req.body.room_id, _id: req.body.activate_id }).exec(
-        (err, activates) => {
+        (err, activatesOld) => {
           if (err) {
             return result.ServerError(res, err);
           }
-          if (activates) {
-            Sensor.find({
-              activate: { $in: activates.map((at) => at._id) },
-              isUsed: true,
-            }).exec((err, sensors) => {
+          if (activatesOld) {
+            let activates = [...activatesOld];
+            Activate.deleteMany({
+              room: req.body.room_id,
+              _id: req.body.activate._id,
+            }).exec((err) => {
               if (err) {
-                result.ServerError(res, err);
-                return;
+                return result.ServerError(res, err);
               }
-              if (sensors) {
-                let newStructure = new Structure();
-                newStructure.room = req.body.room_id;
-                if (Oldstructure) {
-                  newStructure.map = [...Oldstructure.map];
-                } else {
-                  newStructure.map = new Array();
+              global.activate_trigger = 1;
+              Sensor.find({
+                activate: { $in: activates.map((at) => at._id) },
+                isUsed: true,
+              }).exec((err, sensors) => {
+                if (err) {
+                  result.ServerError(res, err);
+                  return;
                 }
+                if (sensors) {
+                  let newStructure = new Structure();
+                  newStructure.room = req.body.room_id;
+                  if (Oldstructure) {
+                    newStructure.map = [...Oldstructure.map];
+                  } else {
+                    newStructure.map = new Array();
+                  }
 
-                newStructure.map = newStructure.map.filter((st) => {
-                  return (
-                    sensors.find((sr) => sr._id + "" == st.sensor + "") == null
-                  );
-                });
+                  newStructure.map = newStructure.map.filter((st) => {
+                    return (
+                      sensors.find((sr) => sr._id + "" == st.sensor + "") ==
+                      null
+                    );
+                  });
 
-                newStructure
-                  .save()
-                  .then(() => {
-                    Activate.find({
-                      room: req.body.room_id,
-                      _id: req.body.activate_id,
-                    }).exec((err, activates) => {
-                      if (err) {
-                        result.ServerError(res, err);
-                        return;
-                      }
+                  newStructure
+                    .save()
+                    .then(() => {
                       if (activates) {
                         Sensor.deleteMany({
                           activate: { $in: activates.map((at) => at._id) },
@@ -201,41 +203,32 @@ exports.removeActivate = (req, res) => {
                             result.ServerError(res, err);
                             return;
                           }
-                          Activate.deleteMany({
-                            room: req.body.room_id,
-                            _id: req.body.activate_id,
-                          }).exec((err) => {
-                            if (err) {
-                              result.ServerError(res, err);
-                              return;
-                            }
-                            global.activate_trigger = 1;
-                            req.io
-                              .to("room" + req.body.room_id)
-                              .emit("activate", {
-                                message: "delete",
-                                data: {
-                                  actionBy: req.userId,
-                                  room: { _id: req.body.room_id },
-                                  activate: {
-                                    _id: req.body.activate_id,
-                                  },
+
+                          req.io
+                            .to("room" + req.body.room_id)
+                            .emit("activate", {
+                              message: "delete",
+                              data: {
+                                actionBy: req.userId,
+                                room: { _id: req.body.room_id },
+                                activate: {
+                                  _id: req.body.activate_id,
                                 },
-                              });
-                            result.Ok(res, "Đã gỡ bỏ api");
-                          });
+                              },
+                            });
+                          result.Ok(res, "Đã gỡ bỏ api");
                         });
                       } else {
                         return result.NotFound(res, "Lỗi");
                       }
+                    })
+                    .catch((err) => {
+                      result.ServerError(res, err);
                     });
-                  })
-                  .catch((err) => {
-                    result.ServerError(res, err);
-                  });
-              } else {
-                return result.NotFound(res, "Lỗi");
-              }
+                } else {
+                  return result.NotFound(res, "Lỗi");
+                }
+              });
             });
           } else {
             return result.NotFound(res, "Lỗi");
