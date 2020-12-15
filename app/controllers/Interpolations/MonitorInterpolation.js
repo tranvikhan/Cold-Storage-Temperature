@@ -12,6 +12,6 @@ exports.Get = (cubeData, areas) => {
         cubeData.values[area.size.x1][area.size.y1][area.size.z1]) /
       8;
 
-    return average != 90 ? { ...area, average: average, count: 8 } : null;
+    return average != 90 ? { ...area._doc, average: average, count: 8 } : null;
   });
 };

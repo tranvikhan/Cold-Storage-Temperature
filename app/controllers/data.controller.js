@@ -546,7 +546,7 @@ const sendDataToRoom = (io) => {
                               ? "WARRING_LOW_TEMPERATURE"
                               : "WARRING_HIGH_TEMPERATURE";
                           Access.find(
-                            { room: area.room },
+                            { room: area.room, accepted: true },
                             { _id: 0, role: 1, room: 1, accepted: 1 }
                           )
                             .populate(

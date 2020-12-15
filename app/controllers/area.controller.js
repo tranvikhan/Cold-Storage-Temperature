@@ -114,7 +114,7 @@ exports.deleteArea = (req, res) => {
       message: "delete",
       data: {
         actionBy: req.userId,
-        room: { _id: area.room },
+        room: { _id: req.body.room_id },
         area: { _id: req.body.area_id },
       },
     });

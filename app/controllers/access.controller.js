@@ -1,6 +1,7 @@
 const db = require("../models");
 const Access = db.access;
 const Notification = db.notification;
+const Room = db.room,
 const result = require("../helps/result.helps");
 const User = require("../models/user.model");
 
@@ -43,48 +44,66 @@ exports.addAccess = (req, res) => {
     user: req.body.user_id,
     role: req.body.role,
   });
-  newAccess
-    .save()
-    .then((access) => {
-      const newNotification = new Notification({
-        user: req.body.user_id,
-        content: "Lời mời cộng tác",
-        type: "Access-Invite",
-        ref: "Access",
-        obj_id: access._id,
-      });
-      newNotification
+  const getRoleName = {
+    Owner: "Chủ kho lạnh",
+    Manager: "Chỉnh sửa",
+    Viewer: "Chỉ xem",
+  };
+  Room.findOne({ _id: req.body.room_id }).exec((err, room) => {
+    if (err) {
+      return result.ServerError(res, err);
+    }
+    if (room) {
+      newAccess
         .save()
-        .then((notification) => {
-          User.findOne(
-            { _id: req.body.user_id },
-            { fullname: 1, avatar: 1, _id: 1, username: 1, email: 1 }
-          ).exec((err, user) => {
-            if (err) {
-              result.ServerError(res, err);
-              return;
-            }
-            req.io
-              .to("user" + notification.user)
-              .emit("notification", { message: "add", data: notification });
-            req.io.to("room" + access.room).emit("access", {
-              message: "invite",
-              data: {
-                actionBy: req.userId,
-                room: { _id: req.body.room_id },
-                access: { ...access._doc, user: user },
-              },
-            });
-            result.Ok(res, { access: { ...access._doc, user: user } });
+        .then((access) => {
+          const newNotification = new Notification({
+            user: req.body.user_id,
+            content:
+              "Lời mời cộng tác: " +
+              room.name +
+              " - với quyền: " +
+              getRoleName[req.body.role],
+            type: "Access-Invite",
+            ref: "Access",
+            obj_id: access._id,
           });
+          newNotification
+            .save()
+            .then((notification) => {
+              User.findOne(
+                { _id: req.body.user_id },
+                { fullname: 1, avatar: 1, _id: 1, username: 1, email: 1 }
+              ).exec((err, user) => {
+                if (err) {
+                  result.ServerError(res, err);
+                  return;
+                }
+                req.io
+                  .to("user" + notification.user)
+                  .emit("notification", { message: "add", data: notification });
+                req.io.to("room" + access.room).emit("access", {
+                  message: "invite",
+                  data: {
+                    actionBy: req.userId,
+                    room: { _id: req.body.room_id },
+                    access: { ...access._doc, user: user },
+                  },
+                });
+                result.Ok(res, { access: { ...access._doc, user: user } });
+              });
+            })
+            .catch((err) => {
+              result.ServerError(res, err);
+            });
         })
         .catch((err) => {
           result.ServerError(res, err);
         });
-    })
-    .catch((err) => {
+    } else {
       result.ServerError(res, err);
-    });
+    }
+  });
 };
 
 /* Edit Room Access -------------------------------------*/
@@ -134,7 +153,7 @@ exports.deleteAccess = (req, res) => {
           data: {
             actionBy: req.userId,
             room: { _id: req.body.room_id },
-            access: { _id: access_id },
+            access: { _id: access._id },
           },
         });
         result.Ok(res, "Xóa thành công");
@@ -161,11 +180,11 @@ exports.replyAccess = (req, res) => {
           access
             .save()
             .then((newAccess) => {
-              req.io.to("user" + access.user).emit("access", {
+              req.io.to("user" + access.user._id).emit("access", {
                 message: "add",
                 data: {
                   actionBy: req.userId,
-                  room: { _id: req.body.room_id },
+                  room: { _id: access.room },
                   access: newAccess,
                 },
               });
@@ -173,7 +192,7 @@ exports.replyAccess = (req, res) => {
                 message: "accepted",
                 data: {
                   actionBy: req.userId,
-                  room: { _id: req.body.room_id },
+                  room: { _id: access.room },
                   access: newAccess,
                 },
               });
@@ -198,7 +217,7 @@ exports.replyAccess = (req, res) => {
         data: {
           actionBy: req.userId,
           room: { _id: req.body.room_id },
-          access: { _id: access_id },
+          access: { _id: req.body.access_id },
         },
       });
       result.Ok(res, "Từ chối thành công");
