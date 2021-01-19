@@ -713,12 +713,51 @@ const checkTime = (strCurrentTime, monitorTime) => {
   return numCurrentTime >= numfromTime && numCurrentTime <= numtoTime
     ? true
     : false;
+  //return isTimeInDuration(strCurrentTime, monitorTime.from, monitorTime.to);
+};
+
+const isTimeInDuration = (point, start, end) => {
+  const dP = new Date(point);
+  const dS = new Date(start);
+  const dE = new Date(end);
+
+  let hP = dP.getHours();
+  let hS = dS.getHours();
+  let hE = dE.getHours();
+  let mP = dP.getMinutes();
+  let sP = dP.getSeconds();
+  let msP = dP.getMilliseconds();
+
+  //Trường hợp qua ngày mới
+  if (hS > hE) {
+    hE += 24;
+    if (hP + 24 < hE + 5) hP += 24;
+  }
+  /* làm luôn phòng khi cần dùng
+   *  thời gian vượt giờ của mốc cần xét tối đa là 5 tiếng không tính phút
+   *  VD:
+   *  23h00 => 0h00 => 4h59 OK
+   *  22h00 => 23h00 => 4h59 OK
+   *  22h00 => 00h00 => 12h00 FAIL
+   *  22h00 => 23h00 => 12h00 FAIL
+   */
+
+  return (
+    hP >= hS &&
+    hP <= hE &&
+    mP >= dS.getMinutes() &&
+    mP <= dE.getMinutes() &&
+    sP >= dS.getSeconds() &&
+    sP <= dE.getSeconds() &&
+    msP >= dS.getMilliseconds() &&
+    msP <= dE.getMilliseconds()
+  );
 };
 
 const htmlData = (user, room, area, monitor, type) => {
   let noti =
     type == "WARRING_HIGH_TEMPERATURE"
-      ? `<span style="color: rgb(226, 80, 65);"><strong>cao hơn </strong></span>`
+      ? `<span style="color: rgb(226, 80, 65);"><strong>Cao hơn </strong></span>`
       : `<span style="color: rgb(41, 105, 176);"><strong>Thấp hơn</strong></span>`;
   let abs =
     type == "WARRING_HIGH_TEMPERATURE"
@@ -726,7 +765,7 @@ const htmlData = (user, room, area, monitor, type) => {
       : area.average - monitor.temperature.min;
   let nowtime = new Date();
   let strtime = nowtime.toUTCString();
-  return (
+  /* return (
     `<h3>Xin ch&agrave;o, <strong>` +
     user.fullname +
     `</strong></h3>
@@ -757,5 +796,179 @@ const htmlData = (user, room, area, monitor, type) => {
     strtime +
     `</p>
    <p><em>Vui l&ograve;ng điều chỉnh nhiệt độ kho lạnh của bạn hoặc tắt chế độ gi&aacute;m s&aacute;t để bỏ qua c&aacute;c email tiếp theo, xin cảm ơn</em></p><p><br></p><p><br></p><p><br></p><h3><br></h3>`
-  );
+  ); */
+
+  return `<p>&nbsp;</p>
+  <div style="margin: 0; background-color: #f4f8f9;">
+  <table style="font-family: Arial,Helvetica,sans-serif; font-size: 13px; color: #706f6f; line-height: 140%; width: 100%; background-color: #f4f8f9;" border="0" cellspacing="0" cellpadding="0">
+  <tbody>
+  <tr>
+  <td>
+  <table style="width: 524px;" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td colspan="3" valign="bottom"><img class="CToWUd" style="vertical-align: bottom;" src="https://123host.vn/wp-content/uploads/email-top.jpg" alt="" width="524" height="24" /></td>
+  </tr>
+  <tr>
+  <td width="524">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #f5f6f8 solid 1px; border-left: #f4f8f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #f5f6f8 solid 1px; border-left: #f4f8f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #f3f4f6 solid 1px; border-left: #f4f8f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #f0f1f3 solid 1px; border-left: #f4f8f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #ecedef solid 1px; border-left: #f4f8f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #e6e7e9 solid 1px; border-left: #f6f7f9 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #e1e2e4 solid 1px; border-left: #f5f6f8 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #dadbdd solid 1px; border-left: #f3f7f8 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #d2d6d7 solid 1px; border-left: #f1f5f6 solid 1px;">
+  <table border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="border-right: #d2d3d5 solid 1px; border-left: #f0f1f3 solid 1px;">
+  <table style="width: 504px;" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tbody>
+  <tr>
+  <td style="background-color: #ffffff;" valign="top" width="506">
+  <table style="width: 504px;" border="0" cellspacing="0" cellpadding="0" align="left">
+  <tbody>
+  <tr>
+  <td style="padding: 20px 0px; border-bottom: 3px solid #b6c2af; width: 172px;" align="center">
+  <h1 style="border-right: #dedede solid 2px; margin: 0;"><img src="https://i.ibb.co/Ld2nm5z/icon.png" alt="" width="80" height="80" /></h1>
+  </td>
+  <td style="padding: 20px 0px; border-bottom: 3px solid #b6c2af; width: 326px;" align="center">
+  <h3 style="margin: 0; color: #63bd68; font-weight: normal;"><span style="color: #2c3e50;"><strong>QUẢN L&Yacute; NHIỆT ĐỘ KHO LẠNH</strong></span></h3>
+  </td>
+  </tr>
+  <tr>
+  <td style="padding: 35px 30px 10px; background-color: #2c3e50; width: 440px;" colspan="2" valign="top">
+  <p><span style="color: #ffffff;">K&iacute;nh ch&agrave;o <strong>${
+    user.fullname
+  }</strong>,</span><br /><br /><span style="color: #ffffff;">Kho lạnh: <strong> ${
+    room.name
+  }</strong></span></p>
+  <p><span style="color: #ffffff;">Khu vực:<strong> ${
+    area.name
+  }</strong></span></p>
+  <h3><span style="color: #f1c40f;"><strong>C&Oacute; NHIỆT ĐỘ NGO&Agrave;I NGƯỠNG CHO PH&Eacute;P</strong></span></h3>
+  <p>&nbsp;</p>
+  <p><span style="color: #ffffff;">Nhiệt độ cảnh b&aacute;o: <strong>${
+    area.average
+  } &deg;C</strong> , ${noti}: <strong>${
+    Math.round(abs * 100) / 100
+  } &deg;C&nbsp;</strong></span></p>
+  <p><span style="color: #ffffff;">Nhiệt độ cho ph&eacute;p từ: <strong>${
+    monitor.temperature.min
+  } &deg;C</strong>&nbsp; đến &nbsp;<strong>${
+    monitor.temperature.max
+  } &deg;C</strong>&nbsp;</span></p>
+  <p><span style="color: #ffffff;">Dấu thời gian:&nbsp;${strtime}</span></p>
+  <br /><span style="color: #ffffff;">Th&ocirc;ng tin c&aacute;c k&ecirc;nh hỗ trợ vui l&ograve;ng tham khảo tại <a style="color: #ffffff;" href="http://nqtoan.herokuapp.com/" target="_blank" rel="noopener">http://nqtoan.herokuapp.com/</a></span><br /><br /><span style="color: #ffffff;">Ch&acirc;n th&agrave;nh cảm ơn v&agrave; k&iacute;nh ch&agrave;o.</span></td>
+  </tr>
+  <tr>
+  <td style="padding: 10px 0px 5px; width: 500px;" colspan="2" valign="middle">
+  <table border="0" cellspacing="0" cellpadding="0">
+  <tbody>
+  <tr>
+  <td width="140">&nbsp;</td>
+  <td valign="middle" width="15" height="26"><a style="color: #706f6f; text-decoration: none;" href="http://nqtoan.herokuapp.com/" target="_blank" rel="noopener"><img class="CToWUd" style="border: 0; vertical-align: middle;" src="https://123host.vn/wp-content/uploads/facebook-icon-40x40.png" height="40" /></a></td>
+  <td width="10">&nbsp;</td>
+  <td><a style="color: #706f6f; text-decoration: none;" href="http://nqtoan.herokuapp.com/" target="_blank" rel="noopener"><img class="CToWUd" style="border: 0; vertical-align: middle;" src="https://123host.vn/wp-content/uploads/twitter-icon-40x40.png" height="40" /></a></td>
+  <td width="10">&nbsp;</td>
+  <td valign="middle" height="26"><a style="color: #706f6f; text-decoration: none;" href="http://nqtoan.herokuapp.com/" target="_blank" rel="noopener"><img class="CToWUd" style="border: 0; vertical-align: middle;" src="https://123host.vn/wp-content/uploads/icon-youtube40x40.png" height="40" /></a></td>
+  <td width="10">&nbsp;</td>
+  <td><a style="color: #706f6f; text-decoration: none;" href="http://nqtoan.herokuapp.com/" target="_blank" rel="noopener"><img class="CToWUd" style="border: 0; vertical-align: middle;" src="https://123host.vn/wp-content/uploads/googleplus40x40.png" height="40" /></a></td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  <tr>
+  <td colspan="3" valign="top"><img class="CToWUd" style="vertical-align: top;" src="https://123host.vn/wp-content/uploads/email-but.jpg" alt="" width="524" height="24" /></td>
+  </tr>
+  </tbody>
+  </table>
+  </td>
+  </tr>
+  <tr>
+  <td style="color: #9b9b9b; font-size: 11px; padding: 10px 0 20px;" align="center" valign="middle">Copyright &copy; Warehouse Temperature</td>
+  </tr>
+  </tbody>
+  </table>
+  <div class="yj6qo">&nbsp;</div>
+  <div class="adL">&nbsp;</div>
+  </div>`;
 };

@@ -315,7 +315,9 @@ exports.NoiSuyBaChieu = (data, config) => {
     }
   }
   let maxTemp = Math.max(...tempArray);
+  /* console.log(tempArray); */
   let minTemp = Math.min(...tempArray);
+
   return {
     values: result,
     max: minTemp === maxTemp ? maxTemp + 1 : maxTemp,

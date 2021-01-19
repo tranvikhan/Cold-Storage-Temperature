@@ -1,17 +1,20 @@
 /* Express --------------------------------------------*/
 const express = require("express");
 const app = express();
-const server = require('http').createServer(app);
+const server = require("http").createServer(app);
+const path = require("path");
+app.use(express.static(path.join(__dirname, "views")));
 global.activate_trigger = 1;
 /* Socket.io server------------------------------------*/
-const io = require('socket.io')(server, {
+const io = require("socket.io")(server, {
   cors: {
-    origin: '*',
-  }
+    origin: "*",
+  },
 });
 
-const socketController = require("./app/controllers/socket.controller").socketController;
-io.on('connection', socket => {
+const socketController = require("./app/controllers/socket.controller")
+  .socketController;
+io.on("connection", (socket) => {
   socketController(socket);
 });
 
@@ -21,7 +24,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 /* Cors --------------------------------------------*/
-const cors = require('cors')
+const cors = require("cors");
 app.use(cors());
 
 /* dotEnv --------------------------------------------*/
@@ -40,20 +43,18 @@ const routes = require("./app/routes");
 
 app.use(function (req, res, next) {
   req.io = io;
-  req.body = {...req.body,...req.query};
-  res.header(
-    "Access-Control-Allow-Headers",
-    "*"
-  );
+  req.body = { ...req.body, ...req.query };
+  res.header("Access-Control-Allow-Headers", "*");
   next();
-})
-app.get('/',(req,res)=>{
-  res.send('Xin Chào, đây là phần mềm quản lý nhiệt độ kho lạnh');
-})
+});
+app.get("/", (req, res) => {
+  //res.send("Xin Chào, đây là phần mềm quản lý nhiệt độ kho lạnh");
+  res.sendFile(path.join(__dirname, "views", "index.html"));
+});
 routes(app);
 /* Get real time data-----*/
-const setRealtimeData = require('./app/controllers/data.controller').setRealtimeData;
-
+const setRealtimeData = require("./app/controllers/data.controller")
+  .setRealtimeData;
 
 /* Databasse Connect------------------------------------*/
 const db = require("./app/models");
@@ -73,13 +74,8 @@ db.mongoose
     process.exit();
   });
 
-
 /* Run Server------------------------------------*/
-app.set('port', process.env.PORT || 8080);
-server.listen(app.get('port'), function() {
-  console.log('I am nunning at port: ', app.get('port'));
+app.set("port", process.env.PORT || 8080);
+server.listen(app.get("port"), function () {
+  console.log("I am nunning at port: ", app.get("port"));
 });
-
-
-
-
